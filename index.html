@@ -2,21 +2,534 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Quiz Magistral – Chapitre 6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Chapitre 6 — L'immunité et l'excrétion</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-    body {
-        margin: 0;
-        font-family: "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top, #0f1c2e, #07101c 70%);
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        overflow-x: hidden;
-    }
+:root {
+  --bg:#040d1a; --surface:#071428; --surface2:#0a1d3a;
+  --border:rgba(0,200,255,0.15); --accent:#00c8ff; --accent2:#7b5ea7;
+  --accent3:#00ff9d; --danger:#ff4d6d; --warning:#ffb347;
+  --text:#e8f4ff; --text2:#7fa8c9;
+  --glow:0 0 20px rgba(0,200,255,0.3);
+  --glow-green:0 0 20px rgba(0,255,157,0.3);
+  --glow-red:0 0 20px rgba(255,77,109,0.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;min-height:100vh;overflow-x:hidden}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.6}
+#app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem}
 
-    #quiz-container {
-        background: rgba(255,255,255,0.08);
-        padding: 35px;
-        border
+/* ── INTRO ── */
+#intro{text-align:center;max-width:720px;animation:fadeInUp .8s ease both}
+.logo-cell{width:100px;height:100px;margin:0 auto 2rem;animation:pulse-cell 3s ease-in-out infinite}
+.logo-cell svg{width:100%;height:100%}
+@keyframes pulse-cell{0%,100%{transform:scale(1);filter:drop-shadow(0 0 10px rgba(0,200,255,.5))}50%{transform:scale(1.08);filter:drop-shadow(0 0 25px rgba(0,200,255,.8))}}
+.intro-label{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.75rem;font-weight:600}
+.intro-title{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:800;line-height:1.1;background:linear-gradient(135deg,#00c8ff 0%,#7b5ea7 50%,#00ff9d 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem}
+.intro-sub{font-size:1rem;color:var(--text2);margin-bottom:2rem;line-height:1.7}
+.section-pills{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:2rem}
+.sp{padding:.35rem .9rem;border-radius:999px;font-size:.75rem;font-weight:600;letter-spacing:.05em;border:1px solid;cursor:default}
+.sp.p1{color:#00c8ff;border-color:rgba(0,200,255,.4);background:rgba(0,200,255,.08)}
+.sp.p2{color:#7b5ea7;border-color:rgba(123,94,167,.4);background:rgba(123,94,167,.08)}
+.sp.p3{color:#ffb347;border-color:rgba(255,179,71,.4);background:rgba(255,179,71,.08)}
+.sp.p4{color:#00ff9d;border-color:rgba(0,255,157,.4);background:rgba(0,255,157,.08)}
+.sp.pS{color:#ff6b9d;border-color:rgba(255,107,157,.4);background:rgba(255,107,157,.08)}
+.stats-row{display:flex;gap:2rem;justify-content:center;margin-bottom:2rem}
+.stat{text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--accent)}
+.stat-label{font-size:.75rem;color:var(--text2);letter-spacing:.05em;text-transform:uppercase}
+.btn-start{display:inline-flex;align-items:center;gap:.75rem;padding:1rem 2.5rem;background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(123,94,167,.15));border:1px solid rgba(0,200,255,.4);border-radius:999px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s;letter-spacing:.05em;position:relative;overflow:hidden}
+.btn-start:hover{transform:translateY(-3px);box-shadow:0 10px 40px rgba(0,200,255,.3)}
+.btn-start:active{transform:translateY(-1px)}
+
+/* ── QUIZ ── */
+#quiz{display:none;width:100%;max-width:730px}
+.quiz-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.section-tag{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.3rem .8rem;border-radius:999px;border:1px solid;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lives-row{display:flex;gap:.4rem}
+.life{width:22px;height:22px;font-size:16px;transition:all .3s;filter:drop-shadow(0 0 6px rgba(255,77,109,.6))}
+.life.lost{filter:grayscale(1);opacity:.3;transform:scale(.8)}
+.score-badge{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--accent);background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.25);padding:.3rem .9rem;border-radius:999px;white-space:nowrap}
+
+.progress-container{margin-bottom:1.5rem}
+.progress-track{height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1);position:relative}
+.progress-fill::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:white;box-shadow:0 0 10px white}
+.progress-label{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2);margin-top:.4rem}
+
+.question-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:2rem;position:relative;overflow:hidden;animation:cardSlideIn .4s cubic-bezier(.4,0,.2,1) both}
+@keyframes cardSlideIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.card-glow{position:absolute;top:-60px;left:-60px;width:200px;height:200px;border-radius:50%;pointer-events:none;opacity:.1;transition:background .3s}
+.q-number{font-size:.72rem;color:var(--text2);margin-bottom:.45rem;letter-spacing:.04em}
+.q-type-badge{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .6rem;border-radius:4px;margin-bottom:.6rem;vertical-align:middle;margin-left:.5rem}
+.q-text{font-size:1.05rem;font-weight:500;line-height:1.65;color:var(--text);margin-bottom:1.2rem}
+.q-formula{background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.2);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:.75rem 1rem;font-family:monospace;font-size:.88rem;color:var(--accent);margin-bottom:1.2rem;line-height:1.6}
+
+.options{display:flex;flex-direction:column;gap:.6rem}
+.opt-btn{display:flex;align-items:flex-start;gap:.9rem;padding:.85rem 1rem;background:var(--surface2);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:.93rem;text-align:left;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;line-height:1.5}
+.opt-btn:hover:not(:disabled){border-color:rgba(0,200,255,.35);transform:translateX(4px);box-shadow:var(--glow)}
+.opt-btn:disabled{cursor:default}
+.opt-letter{width:26px;height:26px;min-width:26px;border-radius:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;letter-spacing:.04em;transition:all .2s;margin-top:.05rem}
+.opt-btn.correct{background:rgba(0,255,157,.08);border-color:rgba(0,255,157,.5);box-shadow:var(--glow-green);animation:correctPop .4s cubic-bezier(.4,0,.2,1) both}
+.opt-btn.correct .opt-letter{background:rgba(0,255,157,.2);border-color:var(--accent3);color:var(--accent3)}
+.opt-btn.wrong{background:rgba(255,77,109,.08);border-color:rgba(255,77,109,.5);box-shadow:var(--glow-red);animation:wrongShake .4s cubic-bezier(.4,0,.2,1) both}
+.opt-btn.wrong .opt-letter{background:rgba(255,77,109,.2);border-color:var(--danger);color:var(--danger)}
+@keyframes correctPop{0%{transform:scale(1)}30%{transform:scale(1.03) translateX(4px)}100%{transform:scale(1) translateX(4px)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.feedback-box{margin-top:.9rem;padding:1rem 1.2rem;border-radius:12px;font-size:.88rem;line-height:1.65;display:none;animation:feedbackSlide .3s ease both}
+@keyframes feedbackSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.feedback-box.ok{display:block;background:rgba(0,255,157,.07);border:1px solid rgba(0,255,157,.25);color:#a8ffe0}
+.feedback-box.ko{display:block;background:rgba(255,77,109,.07);border:1px solid rgba(255,77,109,.25);color:#ffb3c1}
+
+.btn-next{display:none;margin-top:1.1rem;width:100%;padding:.9rem;background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(123,94,167,.15));border:1px solid rgba(0,200,255,.3);border-radius:12px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.03em}
+.btn-next.show{display:block;animation:fadeInUp .3s ease both}
+.btn-next:hover{border-color:rgba(0,200,255,.6);box-shadow:var(--glow);transform:translateY(-2px)}
+
+/* ── RESULT ── */
+#result{display:none;max-width:720px;width:100%;animation:fadeInUp .6s ease both}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:3rem 2rem;text-align:center;position:relative;overflow:hidden}
+.result-emoji{font-size:4rem;margin-bottom:1rem;display:block;animation:bounceIn .6s cubic-bezier(.4,0,.2,1) both}
+@keyframes bounceIn{0%{transform:scale(0) rotate(-15deg);opacity:0}60%{transform:scale(1.15) rotate(5deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+.result-score-big{font-family:'Syne',sans-serif;font-size:clamp(3rem,10vw,5rem);font-weight:800;background:linear-gradient(135deg,#00c8ff,#00ff9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:.25rem}
+.result-pct{font-size:1.1rem;color:var(--text2);margin-bottom:.4rem}
+.result-msg{font-size:1rem;color:var(--text2);margin:.4rem 0 1.5rem;line-height:1.6}
+.breakdown-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin:1.25rem 0;text-align:left}
+.bk-card{background:var(--surface2);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:1rem;transition:transform .2s}
+.bk-card:hover{transform:translateY(-2px)}
+.bk-section{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem}
+.bk-score{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--text)}
+.bk-sub{font-size:.75rem;color:var(--text2)}
+.bk-bar{height:4px;background:rgba(255,255,255,.08);border-radius:999px;margin-top:.5rem;overflow:hidden}
+.bk-bar-fill{height:100%;border-radius:999px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.btn-restart{display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 2rem;background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(123,94,167,.15));border:1px solid rgba(0,200,255,.3);border-radius:999px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:.5rem}
+.btn-restart:hover{box-shadow:var(--glow);transform:translateY(-2px)}
+
+/* ── UI ── */
+.sound-btn{position:fixed;top:1.5rem;left:1.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:999px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;z-index:100;transition:all .2s}
+.sound-btn:hover{background:rgba(255,255,255,.1)}
+.streak-badge{position:fixed;top:1.5rem;right:1.5rem;background:rgba(255,179,71,.12);border:1px solid rgba(255,179,71,.3);border-radius:999px;padding:.4rem 1rem;font-size:.8rem;font-weight:700;color:var(--warning);display:flex;align-items:center;gap:.4rem;z-index:100;transition:all .3s;transform:translateX(200%)}
+.streak-badge.show{transform:translateX(0)}
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:999;animation:confettiFall linear both}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:560px){.question-card{padding:1.25rem}.breakdown-grid{grid-template-columns:1fr}.stats-row{gap:1.25rem}.quiz-header{gap:.5rem}.section-tag{font-size:.6rem}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="sound-btn" id="soundBtn" title="Son on/off">🔊</div>
+<div class="streak-badge" id="streakBadge">🔥 <span id="streakNum">0</span> en série</div>
+
+<div id="app">
+  <!-- INTRO -->
+  <div id="intro">
+    <div class="logo-cell">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="38" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.4)" stroke-width="1.5"/>
+        <circle cx="50" cy="50" r="26" fill="rgba(0,200,255,0.05)" stroke="rgba(0,200,255,0.25)" stroke-width="1"/>
+        <circle cx="50" cy="50" r="10" fill="rgba(0,200,255,0.15)" stroke="rgba(0,200,255,0.5)" stroke-width="1.5"/>
+        <line x1="50" y1="12" x2="50" y2="24" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="50" y1="76" x2="50" y2="88" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="12" y1="50" x2="24" y2="50" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="76" y1="50" x2="88" y2="50" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="21" y1="21" x2="29" y2="29" stroke="rgba(0,200,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="71" y1="71" x2="79" y2="79" stroke="rgba(0,200,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="79" y1="21" x2="71" y2="29" stroke="rgba(0,200,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="29" y1="71" x2="21" y2="79" stroke="rgba(0,200,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="50" cy="12" r="3" fill="rgba(0,200,255,0.7)"/>
+        <circle cx="50" cy="88" r="3" fill="rgba(0,200,255,0.7)"/>
+        <circle cx="12" cy="50" r="3" fill="rgba(0,200,255,0.7)"/>
+        <circle cx="88" cy="50" r="3" fill="rgba(0,200,255,0.7)"/>
+      </svg>
+    </div>
+    <div class="intro-label">Sciences — Sec. 3 · maZoneCEC · Chapitre 6</div>
+    <h1 class="intro-title">L'immunité<br>et l'excrétion</h1>
+    <p class="intro-sub">Quiz complet basé sur ton manuel Zone Mathématique.<br>Inclut les questions de la <strong>Synthèse 6</strong> (pp.229–235).</p>
+    <div class="section-pills">
+      <span class="sp p1">6.1 Système lymphatique</span>
+      <span class="sp p2">6.2 Propriétés physiques</span>
+      <span class="sp p3">6.3 Changements physiques</span>
+      <span class="sp p4">6.4 Système excréteur</span>
+      <span class="sp pS">★ Synthèse officielle</span>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">45</div><div class="stat-label">Questions</div></div>
+      <div class="stat"><div class="stat-num">5</div><div class="stat-label">Catégories</div></div>
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">Vies</div></div>
+    </div>
+    <button class="btn-start" onclick="startQuiz()"><span>Commencer le quiz</span><span>→</span></button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz">
+    <div class="quiz-header">
+      <span class="section-tag" id="secTag">6.1</span>
+      <div class="lives-row" id="livesRow"></div>
+      <div class="score-badge" id="scoreBadge">0 pts</div>
+    </div>
+    <div class="progress-container">
+      <div class="progress-track"><div class="progress-fill" id="progFill"></div></div>
+      <div class="progress-label"><span id="progText">Question 1 / 45</span><span id="progPct">0%</span></div>
+    </div>
+    <div class="question-card" id="qCard">
+      <div class="card-glow" id="cardGlow"></div>
+      <div class="q-number" id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-formula" id="qFormula" style="display:none"></div>
+      <div class="options" id="opts"></div>
+      <div class="feedback-box" id="feedback"></div>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Question suivante →</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div class="result-card">
+      <div class="card-glow" style="background:var(--accent)"></div>
+      <span class="result-emoji" id="resultEmoji">🎉</span>
+      <div class="result-score-big" id="resultScore"></div>
+      <div class="result-pct" id="resultPct"></div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="breakdown-grid" id="breakdownGrid"></div>
+      <button class="btn-restart" onclick="restartQuiz()">↺ Recommencer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────────
+let audioCtx=null, soundOn=true;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx}
+function playTone(freq,type,dur,vol=.18,delay=0){
+  if(!soundOn)return;
+  try{const ctx=getAudio(),osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.connect(gain);gain.connect(ctx.destination);
+  osc.type=type;osc.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+  gain.gain.setValueAtTime(0,ctx.currentTime+delay);
+  gain.gain.linearRampToValueAtTime(vol,ctx.currentTime+delay+.01);
+  gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+delay+dur);
+  osc.start(ctx.currentTime+delay);osc.stop(ctx.currentTime+delay+dur)}catch(e){}}
+function playCorrect(){playTone(523,'sine',.12,.15);playTone(659,'sine',.15,.12,.1);playTone(784,'sine',.2,.1,.2)}
+function playWrong(){playTone(200,'sawtooth',.15,.1);playTone(160,'sawtooth',.25,.08,.12)}
+function playClick(){playTone(440,'sine',.06,.08)}
+function playStart(){[261,329,392,523].forEach((f,i)=>playTone(f,'sine',.15,.1,i*.1))}
+function playComplete(){[523,659,784,1047].forEach((f,i)=>playTone(f,'sine',.3,.12,i*.12));setTimeout(()=>[784,659,523].forEach((f,i)=>playTone(f,'sine',.25,.1,i*.1)),600)}
+function playStreak(){playTone(880,'sine',.08,.15);playTone(1047,'sine',.12,.12,.08)}
+document.getElementById('soundBtn').addEventListener('click',()=>{soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';playClick()});
+
+// ── CANVAS ────────────────────────────────────────────────────────────────
+const canvas=document.getElementById('bg-canvas'),ctx2=canvas.getContext('2d');
+let W,H,pts=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+class Pt{constructor(){this.reset()}reset(){this.x=Math.random()*W;this.y=Math.random()*H;this.r=Math.random()*1.5+.5;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.a=Math.random()*.5+.1;this.c=Math.random()>.5?'0,200,255':Math.random()>.5?'123,94,167':'0,255,157'}
+update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset()}
+draw(){ctx2.beginPath();ctx2.arc(this.x,this.y,this.r,0,Math.PI*2);ctx2.fillStyle=`rgba(${this.c},${this.a})`;ctx2.fill()}}
+for(let i=0;i<120;i++)pts.push(new Pt());
+function drawConn(){for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<80){ctx2.beginPath();ctx2.strokeStyle=`rgba(0,200,255,${.08*(1-d/80)})`;ctx2.lineWidth=.5;ctx2.moveTo(pts[i].x,pts[i].y);ctx2.lineTo(pts[j].x,pts[j].y);ctx2.stroke()}}}
+(function animBg(){ctx2.clearRect(0,0,W,H);drawConn();pts.forEach(p=>{p.update();p.draw()});requestAnimationFrame(animBg)})();
+
+// ── CONFETTI ──────────────────────────────────────────────────────────────
+function spawnConfetti(n=70){
+  const colors=['#00c8ff','#7b5ea7','#00ff9d','#ffb347','#ff4d6d','#fff'];
+  for(let i=0;i<n;i++){const el=document.createElement('div');el.className='confetti-piece';
+  el.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${Math.random()*10+4}px;height:${Math.random()*10+4}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${Math.random()*2+1.5}s;animation-delay:${Math.random()*.8}s;`;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),4000)}}
+
+// ── DATA ──────────────────────────────────────────────────────────────────
+const SECTIONS=[
+  {id:'s1',label:'6.1 Système lymphatique',color:'#00c8ff'},
+  {id:'s2',label:'6.2 Propriétés physiques',color:'#7b5ea7'},
+  {id:'s3',label:'6.3 Changements physiques',color:'#ffb347'},
+  {id:'s4',label:'6.4 Système excréteur',color:'#00ff9d'},
+  {id:'sS',label:'★ Synthèse — Activités officielles',color:'#ff6b9d'},
+];
+
+const Q=[
+  // ═══════════════ 6.1 SYSTÈME LYMPHATIQUE ═══════════════
+  {s:'s1',q:"Qu'est-ce que le liquide interstitiel ? (définition tableau 1, p.193)",
+   opts:["Le sang filtré par les reins","Le liquide issu du plasma sanguin dans lequel baignent toutes les cellules de l'organisme","La lymphe contenue dans les ganglions","L'urine avant la filtration rénale"],
+   ans:1,fb:"Liquide interstitiel = liquide issu de la FILTRATION DU PLASMA qui baigne toutes les cellules. Il sert de milieu de transfert entre le sang et les cellules (O₂, glucose, déchets). Quand il est drainé par les capillaires lymphatiques → on l'appelle LYMPHE."},
+  {s:'s1',q:"La lymphe contient… (tableau 1, p.193)",
+   opts:["Globules rouges, plaquettes, hémoglobine","Eau, globules blancs (lymphocytes), anticorps, nutriments et déchets cellulaires","Urée, glucose et sel uniquement","Plasma, CO₂ et oxygène"],
+   ans:1,fb:"Composition de la lymphe : EAU + GLOBULES BLANCS (lymphocytes) + ANTICORPS + nutriments + déchets cellulaires. C'est la présence massive de lymphocytes et d'anticorps qui lui donne son rôle essentiel dans l'immunité."},
+  {s:'s1',q:"L'immunité innée est non spécifique. Que signifie 'non spécifique' ?",
+   opts:["Elle cible un agent pathogène précis","Elle ne fait pas de distinction entre les différents agents pathogènes","Elle ne fonctionne qu'après vaccination","Elle ne produit pas d'anticorps"],
+   ans:1,fb:"NON SPÉCIFIQUE = réaction identique quel que soit l'agent pathogène. L'immunité innée est présente dès la naissance chez tous les humains. Elle comprend : 1re ligne (peau/muqueuses) et 2e ligne (réaction d'inflammation)."},
+  {s:'s1',q:"Qu'est-ce que la DIAPÉDÈSE ? (figure 6.3, p.194)",
+   opts:["La production d'anticorps par les lymphocytes B","La sortie des phagocytes hors des vaisseaux sanguins pour se rendre aux sites d'infection","La destruction des cellules infectées par les lymphocytes T","Le passage du plasma sanguin vers le liquide interstitiel"],
+   ans:1,fb:"La DIAPÉDÈSE = migration des phagocytes (globules blancs) à travers la paroi des vaisseaux pour atteindre le foyer d'infection. Ils éliminent ensuite les pathogènes par PHAGOCYTOSE (englobement + digestion). C'est la 2e ligne de défense innée."},
+  {s:'s1',q:"L'immunité active acquise est SPÉCIFIQUE. Quelle est l'étape 4 de la figure 6.4 ?",
+   opts:["Les anticorps se fixent sur l'agent pathogène","Le système immunitaire conserve la MÉMOIRE du plan de fabrication des anticorps → immunité acquise","Les lymphocytes B produisent des anticorps","Les lymphocytes T reconnaissent et détruisent les cellules infectées"],
+   ans:1,fb:"Étape 4 de la figure 6.4 : le système immunitaire garde en MÉMOIRE les instructions pour refabriquer les anticorps. Si le même agent pathogène revient, les anticorps existent déjà → réponse immédiate → l'individu est IMMUNISÉ."},
+  {s:'s1',q:"Quel organe du système lymphatique est une 'base d'entraînement' pour les lymphocytes T ?",
+   opts:["La rate","Les amygdales","Le thymus","Les ganglions lymphatiques"],
+   ans:2,fb:"Le THYMUS est l'organe où les lymphocytes T acquièrent leur capacité immunitaire et leur capacité à reconnaître les antigènes étrangers. (Tableau, figure 6.5, p.196)"},
+  {s:'s1',q:"Quel est le rôle de la RATE dans le système lymphatique ?",
+   opts:["Entraîner les lymphocytes T","Capturer les agents pathogènes dans l'air inspiré","Éliminer les globules rouges usés et les plaquettes détériorées — aussi lieu de multiplication des lymphocytes B et T","Produire l'urine"],
+   ans:2,fb:"La RATE : élimine les globules rouges et plaquettes usés + site de multiplication des lymphocytes B et T. Les amygdales elles, capturent les agents pathogènes dans l'air/aliments. Les ganglions filtrent la lymphe et déclenchent la réponse immunitaire."},
+  {s:'s1',q:"Pourquoi les contractions musculaires sont-elles essentielles au système lymphatique ?",
+   opts:["Elles produisent la lymphe","Elles permettent la circulation lymphatique car il n'existe pas d'organe-pompe dans ce système","Elles activent les lymphocytes B","Elles filtrent les déchets de la lymphe"],
+   ans:1,fb:"Contrairement au système circulatoire (cœur = pompe), le système lymphatique n'a PAS d'organe-pompe. Ce sont les CONTRACTIONS MUSCULAIRES qui font circuler la lymphe dans les vaisseaux lymphatiques. La lymphe retourne au sang par les veines sous-clavières."},
+  {s:'s1',q:"Différence entre vaccin vivant atténué et vaccin inerte (inactivé) ?",
+   opts:["Le vaccin inerte est plus efficace et ne nécessite aucun rappel","Vaccin vivant = microbe toujours vivant mais affaibli → meilleure réponse + protection durable. Vaccin inerte = microbe tué/fragmenté → réponse plus faible, rappels nécessaires","Le vaccin vivant contient des bactéries mortes","Les deux sont identiques en termes d'efficacité"],
+   ans:1,fb:"VACCIN VIVANT ATTÉNUÉ : microbe vivant affaibli chimiquement/génétiquement → plus d'anticorps → protection durable. Ex : RRO (rougeole-rubéole-oreillons), gastro-entérite. VACCIN INERTE : microbe tué ou fragmenté → moins efficace → doses de rappel. Ex : coqueluche, tétanos, hépatite B."},
+  {s:'s1',q:"Pourquoi les antibiotiques ne créent-ils PAS d'immunité acquise ?",
+   opts:["Ils sont trop puissants","Ils neutralisent les bactéries directement SANS stimuler la production d'anticorps → aucune mémoire immunitaire","Ils détruisent les lymphocytes B","Ils n'ont aucun effet sur les bactéries"],
+   ans:1,fb:"Les antibiotiques tuent les bactéries par action chimique directe — ils ne déclenchent PAS la production d'anticorps et ne créent PAS de mémoire immunitaire. Contrairement aux vaccins, ils ne 'forment' pas le système immunitaire."},
+  {s:'s1',q:"Lors de l'inflammation, pourquoi les tissus gonflent-ils et rougissent-ils ? (p.194, p.234)",
+   opts:["Les anticorps s'accumulent dans les tissus","Les signaux chimiques augmentent l'afflux de sang à l'endroit de l'infection → rougeur et gonflement → permet l'arrivée des phagocytes","Les cellules se multiplient rapidement","L'agent pathogène produit des toxines qui gonflent les tissus"],
+   ans:1,fb:"Lors de l'inflammation : des SIGNAUX CHIMIQUES augmentent le flux sanguin vers le site infecté → ROUGEUR (vasodilatation) + GONFLEMENT (plus de plasma qui sort des capillaires) + DOULEUR + CHALEUR. Ce flux sanguin accru amène davantage de phagocytes par diapédèse."},
+  {s:'s1',q:"Quels vaccins les élèves de 3e secondaire devraient-ils recevoir ? (p.199)",
+   opts:["Pneumocoque et méningocoque C","Méningocoque C, VPH, hépatite B et vaccin combiné diphtérie-tétanos","Pneumocoque, hépatite B et vaccin combiné diphtérie-tétanos","Méningocoque C, VPH et vaccin combiné diphtérie-coqueluche-tétanos-polio"],
+   ans:1,fb:"Le calendrier québécois de vaccination prévoit pour les élèves de 3e secondaire : méningocoque C, VPH (virus du papillome humain), hépatite B et vaccin combiné diphtérie-tétanos. (p.199)"},
+
+  // ═══════════════ 6.2 PROPRIÉTÉS PHYSIQUES ═══════════════
+  {s:'s2',q:"Définition exacte : propriété physique caractéristique (p.204)",
+   opts:["Propriété qui varie selon la quantité de matière","Propriété caractéristique qu'il est possible d'observer SANS modifier la nature (atome ou molécule) de la substance","Propriété uniquement observable lors d'une réaction chimique","Propriété qui n'existe que pour les solides"],
+   ans:1,fb:"PROPRIÉTÉ PHYSIQUE CARACTÉRISTIQUE = observable SANS modifier la nature de la substance. Exemples : point de fusion, point d'ébullition, masse volumique, solubilité, conductibilité thermique/électrique, dureté. Permettent d'IDENTIFIER une substance."},
+  {s:'s2',q:"Le point de fusion correspond à la température à laquelle :",
+   opts:["Un liquide passe à l'état gazeux","Un solide passe à l'état liquide — le point d'ébullition correspond au passage liquide → gaz","Un gaz se condense","Une substance change de couleur"],
+   ans:1,fb:"POINT DE FUSION = température à laquelle un solide → liquide. POINT D'ÉBULLITION = température à laquelle un liquide → gaz. Ces valeurs dépendent de la pression (données à 101,3 kPa). Chaque substance pure a ses propres valeurs."},
+  {s:'s2',q:"Quelle est la formule de la masse volumique et ses unités ?",
+   opts:["ρ = V ÷ m (en L/g)","ρ = m ÷ V (en g/cm³, g/ml ou g/L)","ρ = m × V (en g²)","ρ = m + V (en g/cm)"],
+   ans:1,formula:"ρ = m ÷ V   →   m = ρ × V   →   V = m ÷ ρ",
+   fb:"MASSE VOLUMIQUE (ρ = rho) = masse ÷ volume. Unités : g/cm³ (solides), g/ml (liquides), g/L (gaz). Eau = 1 g/ml à 4 °C. Plus ρ est élevée, plus la substance est dense. On peut isoler m ou V avec la même formule."},
+  {s:'s2',q:"Selon le tableau 3 (p.205), quelle est la masse volumique de l'eau (H₂O) ?",
+   opts:["7,53 g/ml","13,6 g/ml","1 g/ml (à 4 °C)","19,3 g/ml"],
+   ans:2,fb:"L'eau a une masse volumique de 1 g/ml à 4 °C. C'est la valeur de référence. Le corps humain étant composé de 55-60% d'eau, sa masse volumique est proche de celle de l'eau → il peut flotter (poumons remplis d'air)."},
+  {s:'s2',q:"Quelle est la formule de la solubilité et ses unités ?",
+   opts:["s = V_soluté ÷ V_solvant (en ml/ml)","s = m_soluté ÷ V_solvant (en g/L ou g/100 ml)","s = m_soluté × T (en g·°C)","s = V_solvant ÷ m_soluté (en ml/g)"],
+   ans:1,formula:"s = m_soluté ÷ V_solvant   (g/L  ou  g/100 ml)",
+   fb:"SOLUBILITÉ = quantité MAX de soluté dissolvable dans un solvant à une T° donnée. s = masse de soluté ÷ volume de solvant. Ex : 89 g de sel dans 250 ml d'eau → s = 89 ÷ 0,25 = 356 g/L. Dépasse la solubilité → solution SATURÉE."},
+  {s:'s2',q:"Dans une solution SATURÉE, qu'arrive-t-il au soluté excédentaire ?",
+   opts:["Il se dissout progressivement","Il se dépose au fond du récipient — la solution est saturée","Il s'évapore avec le solvant","Il change l'état du solvant"],
+   ans:1,fb:"Solution SATURÉE : toutes les molécules de solvant sont utilisées. On ne peut plus dissoudre de soluté supplémentaire. Le soluté EXCÉDENTAIRE SE DÉPOSE au fond (figure 6.8). Solution INSATURÉE : des molécules de solvant libres permettent encore de dissoudre du soluté."},
+  {s:'s2',q:"Effet de la température sur la solubilité : quelle affirmation est VRAIE ?",
+   opts:["Les solides et gaz voient leur solubilité augmenter avec la température","Pour les solutés solides : solubilité augmente avec T°. Pour les solutés gazeux (ex. CO₂, O₂) : solubilité DIMINUE avec T°","La température n'a aucun effet sur la solubilité","Les gaz se dissolvent mieux à chaud"],
+   ans:1,fb:"SOLIDES : solubilité ↑ quand T° ↑ (ex. saccharose). GAZEUX : solubilité ↓ quand T° ↑ (ex. CO₂, O₂). Impact du réchauffement climatique : eau plus chaude → moins d'O₂ dissous → impact sur la faune et flore aquatiques."},
+  {s:'s2',q:"Les calculs rénaux (p.207) se forment parce que :",
+   opts:["Les reins ne fonctionnent plus","La concentration de certains minéraux dans les urines dépasse leur solubilité → précipitation et dépôt minéral dans les reins","Le pH sanguin est trop acide","Les lymphocytes attaquent les tissus rénaux"],
+   ans:1,fb:"Calculs rénaux = quand les urines sont SATURÉES en certains minéraux (ex. oxalate de calcium CaC₂O₄ — solubilité 0,7 mg/100 ml à 37 °C). La solubilité est dépassée → précipitation → dépôt minéral. Ils peuvent obstruer les voies urinaires."},
+
+  // ═══════════════ 6.3 CHANGEMENTS PHYSIQUES ═══════════════
+  {s:'s3',q:"Définition exacte : changement physique (p.211)",
+   opts:["Changement qui crée de nouvelles substances","Changement au cours duquel une substance passe d'un aspect à l'autre SANS modifier son unité de base (atome ou molécule)","Changement toujours irréversible","Changement nécessitant un apport d'énergie"],
+   ans:1,fb:"CHANGEMENT PHYSIQUE : la NATURE de la substance est conservée (les atomes/molécules restent identiques). Exemples : changement d'état, changement de forme, dissolution, dilution. À distinguer du changement CHIMIQUE qui crée de nouvelles molécules."},
+  {s:'s3',q:"Parmi les 4 types de changements physiques du tableau 4 (p.211), lequel est illustré par 'la sueur qui s'évapore' ?",
+   opts:["Changement de forme","Formation de mélanges","Dilution","Changement d'état — la sueur (liquide) passe à l'état gazeux (vapeur d'eau)"],
+   ans:3,fb:"L'évaporation de la sueur est un CHANGEMENT D'ÉTAT (liquide → gaz). Les molécules d'eau (H₂O) restent identiques — leur nature n'est pas modifiée. Ce changement d'état permet la THERMORÉGULATION : la vaporisation absorbe la chaleur du corps."},
+  {s:'s3',q:"Lors de la VAPORISATION selon le modèle particulaire (figure 6.14) :",
+   opts:["Les molécules disparaissent","Les forces d'attraction entre molécules deviennent insuffisantes pour les maintenir proches → elles se dispersent dans l'espace","Les molécules fusionnent en nouvelles substances","Les molécules ralentissent et forment un réseau rigide"],
+   ans:1,fb:"VAPORISATION : les forces d'attraction entre molécules s'affaiblissent jusqu'à être insuffisantes pour les garder proches → les molécules se DISPERSENT dans l'espace disponible (état gazeux). Les 2 états COEXISTENT au point d'ébullition. Apport d'énergie ABSORBÉ."},
+  {s:'s3',q:"Fusion et solidification : lequel absorbe de l'énergie et lequel en dégage ?",
+   opts:["Fusion dégage, solidification absorbe","Fusion absorbe (endothermique), solidification dégage (exothermique)","Les deux absorbent","Les deux dégagent"],
+   ans:1,fb:"FUSION (solide → liquide) : ABSORBE l'énergie → brise les forces d'attraction → flèches rouges sur le diagramme. SOLIDIFICATION (liquide → solide) : DÉGAGE l'énergie → les forces se reforment → flèches bleues. Même principe pour vaporisation (absorbe) vs condensation (dégage)."},
+  {s:'s3',q:"Définition exacte : dilution (p.213)",
+   opts:["Augmentation de la concentration par évaporation","Processus consistant à ajouter un solvant à une solution initiale pour obtenir une solution finale de concentration INFÉRIEURE","Séparation du soluté et du solvant","Mélange de deux solutions de même concentration"],
+   ans:1,fb:"DILUTION = ajouter du SOLVANT → concentration DIMINUE. La quantité de soluté est CONSERVÉE (m₁ = m₂). C'est pourquoi on utilise la loi C₁V₁ = C₂V₂. Exemples biologiques : les reins diluent les déchets dans l'eau pour former l'urine."},
+  {s:'s3',q:"Loi de la dilution — quelle formule s'applique ? (Savoir-faire 3, p.215)",
+   opts:["C₁ + V₁ = C₂ + V₂","C₁ × V₁ = C₂ × V₂","C₁ ÷ V₁ = C₂ ÷ V₂","(C₁ + C₂) = (V₁ + V₂)"],
+   ans:1,formula:"C₁V₁ = C₂V₂   (même unité de concentration et de volume des 2 côtés)",
+   fb:"C₁V₁ = C₂V₂ : la masse de soluté est conservée lors d'une dilution. Permet de calculer : concentration finale, volume final, volume initial prélevé, ou concentration initiale. Les unités doivent être cohérentes des deux côtés."},
+  {s:'s3',q:"Calcul : 25 ml d'une solution à 150 g/L → on veut 50 g/L. Volume final V₂ = ?",
+   opts:["25 ml","50 ml","75 ml","100 ml"],
+   ans:2,formula:"150 × 25 = 50 × V₂  →  V₂ = 3 750 ÷ 50 = 75 ml",
+   fb:"C₁V₁ = C₂V₂ → 150 × 25 = 50 × V₂ → V₂ = 75 ml. Il faut ajouter 75 − 25 = 50 ml de solvant. La concentration est divisée par 3 → le volume est multiplié par 3. (Exemple 1, p.215)"},
+  {s:'s3',q:"Calcul : 500 ml à 15 g/L + 100 ml d'eau. Concentration finale C₂ = ?",
+   opts:["15 g/L","12,5 g/L","7,5 g/L","30 g/L"],
+   ans:1,formula:"V₂ = 600 ml  →  C₂ = (15 × 500) ÷ 600 = 12 500 ÷ 600 = 12,5 g/L",
+   fb:"C₂ = C₁V₁ ÷ V₂ = (15 × 500) ÷ 600 = 12,5 g/L. La concentration diminue car on a ajouté 100 ml de solvant. (Exemple 2, p.215)"},
+
+  // ═══════════════ 6.4 SYSTÈME EXCRÉTEUR ═══════════════
+  {s:'s4',q:"Définition exacte : homéostasie (p.221)",
+   opts:["Régulation du rythme cardiaque","Stabilité des paramètres physiques et chimiques de notre milieu intérieur, particulièrement du sang","Équilibre alimentaire journalier","Capacité des reins à filtrer le sang"],
+   ans:1,fb:"HOMÉOSTASIE = stabilité du MILIEU INTÉRIEUR. Paramètres : pH sanguin (7,35–7,45), température (35–38 °C), concentration de sucre (0,6–7,00 g/L), pression CO₂ (4,8–5,8 kPa). Le métabolisme cellulaire perturbe constamment ces paramètres → le corps les régule via le système excréteur."},
+  {s:'s4',q:"Le système excréteur est composé de 3 systèmes. Lesquels ?",
+   opts:["Reins, foie, poumons","Système respiratoire + système urinaire + glandes sudoripares","Système digestif + système urinaire + peau","Reins + vessie + urètre seulement"],
+   ans:1,fb:"SYSTÈME EXCRÉTEUR = 3 composantes : 1. SYSTÈME RESPIRATOIRE (expulse CO₂ et eau). 2. SYSTÈME URINAIRE (filtre le sang → urine). 3. GLANDES SUDORIPARES (transpiration → régulation thermique + déchets azotés). Objectif commun : éliminer les déchets du métabolisme pour préserver l'homéostasie."},
+  {s:'s4',q:"Quels sont les principaux solutés de l'urine ? (figure 6.17, p.222)",
+   opts:["Glucose, acides aminés, protéines, globules rouges","Urée (~2,5%), minéraux en surplus (~2%), créatinine (~0,1%), urochrome","Insuline, adrénaline, hémoglobine","Oxygène, CO₂, eau uniquement"],
+   ans:1,fb:"L'urine = 95% eau + solutés : URÉE (~2,5% — déchet du catabolisme des protéines, produite par le foie), MINÉRAUX EN SURPLUS (~2%), CRÉATININE (~0,1% — déchet musculaire, indicateur de santé rénale), UROCHROME (couleur jaune, synthétisé à partir des globules rouges usés). PAS de glucose ni protéines ni globules rouges en situation normale."},
+  {s:'s4',q:"Quel est le trajet de l'urine depuis le rein jusqu'à l'extérieur ?",
+   opts:["Rein → Urètre → Uretère → Vessie","Rein → Calice → Bassinet → Uretère → Vessie → Urètre","Rein → Artère rénale → Calice → Urètre","Rein → Veine rénale → Uretère → Urètre"],
+   ans:1,formula:"Artère rénale → Rein (néphrons) → Calice → Bassinet → Uretère → Vessie → Urètre",
+   fb:"Trajet de l'urine : Rein → CALICE → BASSINET → URETÈRE (conduit chaque rein à la vessie) → VESSIE (réservoir musculaire, peut contenir jusqu'à 1 L) → URÈTRE (conduit vers l'extérieur, contrôlé par les SPHINCTERS). Le sang filtré repart par la VEINE RÉNALE vers le cœur."},
+  {s:'s4',q:"Pourquoi l'urine normale ne contient-elle pas de glucose ?",
+   opts:["Le glucose est trop gros pour passer dans les néphrons","Le glucose est entièrement réabsorbé dans les capillaires autour des néphrons — sa présence dans l'urine est anormale","Le glucose se décompose dans les reins","Le glucose est filtré par la rate avant d'atteindre les reins"],
+   ans:1,fb:"Lors du passage de l'urine dans les NÉPHRONS, les substances utiles (glucose, acides aminés, eau, sels nécessaires) sont RÉABSORBÉES dans les capillaires. Sa présence dans l'urine = GLUCOSURIE → souvent signe de diabète (glycémie trop élevée pour être totalement réabsorbée)."},
+  {s:'s4',q:"Quels sont les 3 rôles de la sueur selon le tableau 7 (p.225) ?",
+   opts:["Digestion, immunité, excrétion","Régulation de la température corporelle + excrétion de déchets azotés + protection antifongique et antibactérienne","Production de vitamine D, lubrification, thermorégulation","Excrétion de CO₂, production d'anticorps, thermorégulation"],
+   ans:1,fb:"Tableau 7 — Rôles de la sueur : 1. RÉGULATION DE LA TEMPÉRATURE (évaporation refroidit le corps). 2. EXCRÉTION DE DÉCHETS AZOTÉS (urée, ammoniac). 3. PROTECTION ANTIFONGIQUE ET ANTIBACTÉRIENNE (anticorps et substances antibactériennes de la sueur). Composition : ~99% eau + NaCl + urée + substances antibactériennes."},
+  {s:'s4',q:"Comment l'accélération de la respiration aide-t-elle à rétablir l'homéostasie lors d'un effort physique ?",
+   opts:["Elle augmente la production de sueur","Elle permet d'expulser davantage de CO₂ (régule le pH) et d'absorber plus d'O₂ — rétablit la concentration de CO₂ et la pression d'O₂ dans le sang","Elle produit plus d'urine","Elle ralentit le métabolisme cellulaire"],
+   ans:1,fb:"Lors d'un exercice physique, le métabolisme produit plus de CO₂ → perturbation de l'homéostasie. L'accélération de la RESPIRATION expulse davantage de CO₂ (rétablit le pH sanguin et la pression de CO₂) ET absorbe plus d'O₂. Les 2 paramètres rétablis : concentration O₂ et CO₂ dans le sang. (p.234)"},
+
+  // ═══════════════ ★ SYNTHÈSE OFFICIELLE ═══════════════
+  {s:'sS',q:"[Synthèse p.231 Q1] Nos cellules et tissus sont légèrement espacés les uns des autres. Qu'est-ce qui comble cet espace ?",
+   opts:["Le plasma sanguin","Le vide","Le liquide interstitiel","L'air riche en dioxygène"],
+   ans:2,fb:"Le LIQUIDE INTERSTITIEL comble les espaces entre les cellules et les tissus. Il provient du plasma sanguin et sert de milieu de transfert entre le sang et les cellules."},
+  {s:'sS',q:"[Synthèse p.231 Q2] Quel organe ne fait PAS partie du système excréteur ?",
+   opts:["Les reins","La vessie","L'estomac","Les poumons"],
+   ans:2,fb:"L'ESTOMAC fait partie du système digestif, pas du système excréteur. Le système excréteur comprend : les reins/vessie (système urinaire), les poumons (système respiratoire) et les glandes sudoripares."},
+  {s:'sS',q:"[Synthèse p.231 Q3] Quel énoncé décrit une immunité innée NON SPÉCIFIQUE ?",
+   opts:["La protection contre la grippe saisonnière grâce au vaccin annuel","La transmission de certains anticorps de la mère au bébé par le cordon ombilical","La protection par la peau contre la pénétration de certains agents infectieux","La protection contre le virus de la varicelle après avoir contracté la maladie"],
+   ans:2,fb:"La PEAU protège contre n'importe quel agent infectieux sans le reconnaître → immunité INNÉE NON SPÉCIFIQUE. Les vaccins et l'infection naturelle créent une immunité ACQUISE SPÉCIFIQUE. Les anticorps transmis par la mère sont une immunité passive."},
+  {s:'sS',q:"[Synthèse p.231 Q4] Quel changement n'est PAS un changement physique ?",
+   opts:["La dissolution","La combustion","La fusion","La dilution"],
+   ans:1,fb:"La COMBUSTION est un changement CHIMIQUE : elle modifie la nature des substances (nouvelles molécules produites : CO₂, H₂O). La dissolution, la fusion et la dilution sont des changements physiques : la nature des molécules est conservée."},
+  {s:'sS',q:"[Synthèse p.231 Q5 ST] On prend 100 ml d'une solution et on y ajoute 300 ml de solvant. Qu'est-il de la concentration finale ?",
+   opts:["Elle est 3 fois plus élevée que la concentration initiale","Elle correspond au tiers de la concentration initiale","Elle est 4 fois plus élevée","Elle correspond au quart de la concentration initiale"],
+   ans:3,formula:"V₂ = 100 + 300 = 400 ml  →  C₂ = C₁ × 100 ÷ 400 = C₁ ÷ 4",
+   fb:"V₁ = 100 ml, V₂ = 400 ml. C₁V₁ = C₂V₂ → C₂ = C₁ × 100/400 = C₁/4. La concentration finale correspond au QUART de la concentration initiale. On a quadruplé le volume → on a divisé la concentration par 4."},
+  {s:'sS',q:"[Synthèse p.231 Q6 ST] Que mesure la solubilité d'un soluté ?",
+   opts:["La proportion d'une solution occupée par le soluté","La proportion d'une solution occupée par le solvant","La quantité maximale de soluté qu'on peut dissoudre dans un solvant","La quantité minimale de soluté qu'on peut dissoudre dans un solvant"],
+   ans:2,fb:"La SOLUBILITÉ = quantité MAXIMALE de soluté dissolvable dans un solvant à une température donnée. Au-delà → solution SATURÉE, le soluté se dépose. En deçà → solution insaturée. Formule : s = m_soluté ÷ V_solvant."},
+  {s:'sS',q:"[Synthèse p.232 Q8] Laquelle n'est PAS une propriété physique caractéristique ?",
+   opts:["La masse volumique","Le point d'ébullition","La solubilité","Le volume"],
+   ans:3,fb:"Le VOLUME n'est PAS une propriété physique CARACTÉRISTIQUE car il varie selon la quantité de matière. Les propriétés caractéristiques sont indépendantes de la quantité : point de fusion, point d'ébullition, masse volumique, solubilité, conductibilité, dureté."},
+  {s:'sS',q:"[Synthèse p.232 Q9] Quel système du corps contrôle la TEMPÉRATURE de l'organisme ?",
+   opts:["Le système urinaire","Les glandes sudoripares","Le système respiratoire","Le système circulatoire"],
+   ans:1,fb:"Les GLANDES SUDORIPARES régulent la température corporelle par évaporation de la sueur. Le système urinaire régule la concentration des minéraux et de l'urée dans le sang. Le système respiratoire régule la concentration d'O₂ et CO₂ dans le sang."},
+  {s:'sS',q:"[Synthèse p.232 Q10 ST] 10 ml d'une solution à 100 g/L → on dilue à 10 g/L. Quel volume final V₂ ?",
+   opts:["10 ml","50 ml","100 ml","150 ml"],
+   ans:2,formula:"100 × 10 = 10 × V₂  →  V₂ = 1000 ÷ 10 = 100 ml",
+   fb:"C₁V₁ = C₂V₂ → 100 × 10 = 10 × V₂ → V₂ = 100 ml. La concentration a été divisée par 10 → le volume doit être multiplié par 10. On doit donc ajouter 100 − 10 = 90 ml de solvant."},
+  {s:'sS',q:"[Synthèse p.233 Q12] Quel organe a pour rôle 'd'être un conduit qui relie le bassinet du rein à la vessie' ?",
+   opts:["L'urètre","La veine rénale","L'uretère","Le néphron"],
+   ans:2,fb:"L'URETÈRE conduit l'urine produite par le rein (via le calice et le bassinet) jusqu'à la vessie. À ne pas confondre avec l'URÈTRE qui conduit l'urine de la vessie vers l'extérieur de l'organisme."},
+  {s:'sS',q:"[Synthèse p.233 Q14] Après une gastroentérite (vomissements et diarrhées abondantes), les urines sont généralement réduites. Pourquoi ?",
+   opts:["Les reins sont endommagés par les bactéries","L'organisme perd beaucoup d'eau → déshydratation → les reins réabsorbent davantage d'eau pour compenser → urine moins abondante","Les vomissements bloquent le système urinaire","Le foie produit moins d'urée"],
+   ans:1,fb:"Lors d'une gastroentérite, l'organisme perd beaucoup d'EAU par les vomissements et diarrhées → DÉSHYDRATATION → le milieu intérieur est déséquilibré (homéostasie perturbée). Pour compenser, les reins RÉABSORBENT davantage d'eau → urines moins abondantes et plus concentrées (plus foncées)."},
+  {s:'sS',q:"[Synthèse p.233 Q13 ST] Hania a 200 ml d'urine à 12 mg/l de créatinine. Ensuite 8 mg/l. Quelle quantité d'eau a été ajoutée ?",
+   opts:["50 ml","100 ml","150 ml","200 ml"],
+   ans:1,formula:"C₁V₁ = C₂V₂ → 12 × 200 = 8 × V₂ → V₂ = 300 ml → eau ajoutée = 300 - 200 = 100 ml",
+   fb:"C₁V₁ = C₂V₂ → 12 × 200 = 8 × V₂ → V₂ = 2400/8 = 300 ml. Eau ajoutée = 300 − 200 = 100 ml. Les reins ont ajouté 100 ml d'eau à la vessie, diluant la créatinine de 12 à 8 mg/l."},
+  {s:'sS',q:"[Mots croisés p.235 — Vocabulaire] Processus par lequel un lymphocyte ENCERCLE et DIGÈRE un agent pathogène :",
+   opts:["La diapédèse","La vaccination","La phagocytose","L'homéostasie"],
+   ans:2,fb:"PHAGOCYTOSE = processus par lequel un phagocyte (globule blanc) englobe et DIGÈRE un agent pathogène. C'est la 2e étape après la diapédèse (sortie des phagocytes des vaisseaux). Ensemble, diapédèse + phagocytose constituent la 2e ligne de défense innée."},
+  {s:'sS',q:"[Mots croisés p.235 — Vocabulaire] Molécules produites par les lymphocytes B qui neutralisent les agents pathogènes :",
+   opts:["Les antigènes","Les anticorps","Les enzymes digestives","Les phagocytes"],
+   ans:1,fb:"Les ANTICORPS sont des molécules spécialisées produites par les LYMPHOCYTES B. Ils sont spécifiques à un agent pathogène précis (relation clé-serrure). Ils se fixent à l'antigène pour le neutraliser, le détruire ou faciliter sa phagocytose."},
+  {s:'sS',q:"[Mots croisés p.235 — Vocabulaire] Processus consistant à ajouter du solvant pour diminuer la concentration d'une solution (ST) :",
+   opts:["La solubilité","La saturation","La dilution","La fusion"],
+   ans:2,fb:"La DILUTION = ajout de SOLVANT à une solution initiale pour obtenir une concentration INFÉRIEURE. La loi de la dilution est C₁V₁ = C₂V₂ (quantité de soluté conservée). Exemple biologique : les reins diluent les déchets dans l'eau pour former l'urine."},
+];
+
+const sStats={s1:{ok:0,tot:0},s2:{ok:0,tot:0},s3:{ok:0,tot:0},s4:{ok:0,tot:0},sS:{ok:0,tot:0}};
+Q.forEach(q=>sStats[q.s].tot++);
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let cur=0,score=0,streak=0,answered=false,lives=3;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function secInfo(sid){return SECTIONS.find(s=>s.id===sid)}
+function renderLives(){
+  const row=document.getElementById('livesRow');row.innerHTML='';
+  for(let i=0;i<3;i++){const el=document.createElement('span');el.className='life'+(i>=lives?' lost':'');el.textContent='❤️';row.appendChild(el)}}
+
+// ── QUIZ FLOW ─────────────────────────────────────────────────────────────
+function startQuiz(){
+  playStart();
+  document.getElementById('intro').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  renderQuestion();
+}
+
+function renderQuestion(){
+  if(cur>=Q.length){showResult();return}
+  const q=Q[cur],si=secInfo(q.s);
+  answered=false;
+  const tag=document.getElementById('secTag');
+  tag.textContent=si.label;tag.style.color=si.color;
+  tag.style.borderColor=si.color+'50';tag.style.background=si.color+'10';
+  renderLives();
+  document.getElementById('scoreBadge').textContent=score+' pts';
+  const pct=Math.round(cur/Q.length*100);
+  const fill=document.getElementById('progFill');
+  fill.style.width=pct+'%';fill.style.background=`linear-gradient(90deg,${si.color},${si.color}88)`;
+  document.getElementById('progText').textContent=`Question ${cur+1} / ${Q.length}`;
+  document.getElementById('progPct').textContent=pct+'%';
+  document.getElementById('cardGlow').style.background=si.color;
+  document.getElementById('qNum').textContent=`Question ${cur+1} — ${si.label}`;
+  document.getElementById('qText').textContent=q.q;
+  const fEl=document.getElementById('qFormula');
+  if(q.formula){fEl.textContent=q.formula;fEl.style.display='block'}else{fEl.style.display='none'}
+  const container=document.getElementById('opts');container.innerHTML='';
+  const letters=['A','B','C','D'];
+  q.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick=()=>pickAnswer(i,btn);
+    container.appendChild(btn);
+  });
+  const fb=document.getElementById('feedback');fb.className='feedback-box';fb.innerHTML='';
+  const btnNext=document.getElementById('btnNext');
+  btnNext.className='btn-next';
+  btnNext.textContent=cur===Q.length-1?'Voir le résultat →':'Question suivante →';
+  const card=document.getElementById('qCard');
+  card.style.animation='none';
+  setTimeout(()=>{card.style.animation='cardSlideIn .4s cubic-bezier(.4,0,.2,1) both'},10);
+}
+
+function pickAnswer(idx,btn){
+  if(answered)return;
+  answered=true;playClick();
+  const q=Q[cur];
+  const allBtns=document.querySelectorAll('.opt-btn');
+  allBtns.forEach(b=>b.disabled=true);
+  const isOk=idx===q.ans;
+  if(isOk){btn.classList.add('correct');score+=10;streak++;sStats[q.s].ok++;playCorrect();if(streak>=3){playStreak();showStreak()}}
+  else{btn.classList.add('wrong');allBtns[q.ans].classList.add('correct');lives--;streak=0;hideStreak();playWrong()}
+  const fb=document.getElementById('feedback');
+  fb.innerHTML=`<span style="margin-right:.4rem">${isOk?'✓':'✗'}</span>${q.fb}`;
+  fb.className='feedback-box '+(isOk?'ok':'ko');
+  document.getElementById('scoreBadge').textContent=score+' pts';
+  renderLives();
+  document.getElementById('btnNext').classList.add('show');
+}
+
+function nextQuestion(){playClick();cur++;renderQuestion()}
+function showStreak(){document.getElementById('streakNum').textContent=streak;document.getElementById('streakBadge').classList.add('show')}
+function hideStreak(){document.getElementById('streakBadge').classList.remove('show')}
+
+// ── RESULT ────────────────────────────────────────────────────────────────
+function showResult(){
+  document.getElementById('quiz').style.display='none';
+  document.getElementById('result').style.display='block';
+  hideStreak();
+  const pct=Math.round(score/(Q.length*10)*100);
+  let emoji,msg;
+  if(pct>=90){emoji='🏆';msg='Exceptionnel ! Maîtrise totale du chapitre 6.'}
+  else if(pct>=75){emoji='🌟';msg='Très bien ! Quelques notions à revoir.'}
+  else if(pct>=60){emoji='💪';msg='Bien joué ! Revois les sections plus faibles.'}
+  else{emoji='📚';msg='Reprends tes notes section par section !'}
+  document.getElementById('resultEmoji').textContent=emoji;
+  document.getElementById('resultScore').textContent=`${score} / ${Q.length*10}`;
+  document.getElementById('resultPct').textContent=pct+'%';
+  document.getElementById('resultMsg').textContent=msg;
+  const grid=document.getElementById('breakdownGrid');grid.innerHTML='';
+  SECTIONS.forEach(s=>{
+    const st=sStats[s.id],p=Math.round(st.ok/st.tot*100);
+    const card=document.createElement('div');card.className='bk-card';
+    card.innerHTML=`<div class="bk-section" style="color:${s.color}">${s.label}</div><div class="bk-score">${st.ok}/${st.tot}</div><div class="bk-sub">${p}% de réussite</div><div class="bk-bar"><div class="bk-bar-fill" style="background:${s.color};width:0%"></div></div>`;
+    grid.appendChild(card);
+    setTimeout(()=>{card.querySelector('.bk-bar-fill').style.width=p+'%'},300);
+  });
+  playComplete();
+  if(pct>=70)setTimeout(()=>spawnConfetti(80),300);
+}
+
+function restartQuiz(){
+  playStart();cur=0;score=0;streak=0;lives=3;answered=false;
+  SECTIONS.forEach(s=>{sStats[s.id].ok=0});
+  document.getElementById('result').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  renderQuestion();
+}
+</script>
+</body>
+</html>
